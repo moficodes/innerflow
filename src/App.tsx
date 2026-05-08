@@ -331,10 +331,9 @@ function AppContent() {
 }
 
 function AuthForm() {
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(true);
   const [showEmailOptions, setShowEmailOptions] = useState(false);
   const [error, setError] = useState('');
 
@@ -342,11 +341,7 @@ function AuthForm() {
     e.preventDefault();
     setError('');
     try {
-      if (isLogin) {
-        await signIn(email, password);
-      } else {
-        await signUp(email, password);
-      }
+      await signIn(email, password);
     } catch (err: any) {
       setError(err.message);
     }
@@ -407,7 +402,7 @@ function AuthForm() {
           </button>
         ) : (
           <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-            <h4 className="text-sm font-medium text-white/80 mb-4 text-center">{isLogin ? 'Sign In' : 'Sign Up'}</h4>
+            <h4 className="text-sm font-medium text-white/80 mb-4 text-center">Sign In</h4>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <input 
                 type="email" 
@@ -431,15 +426,9 @@ function AuthForm() {
                 className="flex items-center justify-center gap-2 mt-2 px-8 py-3 rounded-xl bg-indigo-500 text-white text-xs font-bold tracking-[0.1em] uppercase hover:bg-indigo-600 transition-all active:scale-95"
               >
                 <LogIn size={14} />
-                {isLogin ? 'Initialize Sequence' : 'Create Identity'}
+                Initialize Sequence
               </button>
             </form>
-            <button 
-              onClick={() => setIsLogin(!isLogin)} 
-              className="mt-6 w-full text-center text-[10px] text-white/40 uppercase tracking-widest hover:text-white/80 transition-colors"
-            >
-              {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
-            </button>
           </div>
         )}
       </div>
