@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // -------------------------------------------------------------------------
+    // Global Safety Net
+    // -------------------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Global Helpers
+    // -------------------------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // -------------------------------------------------------------------------
+    // User Profiles
+    // -------------------------------------------------------------------------
+    function isValidUser(data) {
+      return data.keys().hasAll(['userId', 'createdAt']) &&
+             data.keys().size() <= 4 &&
+             data.userId == request.auth.uid &&
+             data.userId is string &&
+             data.createdAt == request.time &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500));
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming()) &&
+                      incoming().userId == existing().userId &&
+                      incoming().createdAt == existing().createdAt;
+    }
+
+    // -------------------------------------------------------------------------
+    // Sessions & Breath-Holds
+    // -------------------------------------------------------------------------
+    function isValidSession(data) {
+      return data.keys().hasAll(['userId', 'type', 'timestamp']) &&
+             data.userId == request.auth.uid &&
+             data.type in ['exercise', 'hold'] &&
+             data.timestamp == request.time &&
+             (!('exerciseName' in data) || (data.exerciseName is string && data.exerciseName.size() <= 100)) &&
+             (!('durationSeconds' in data) || (data.durationSeconds is number && data.durationSeconds >= 0)) &&
+             (!('breathHoldSeconds' in data) || (data.breathHoldSeconds is number && data.breathHoldSeconds >= 0));
+    }
+
+    match /sessions/{sessionId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidSession(incoming());
+      // Sessions are immutable records for tracking progress
+      allow update, delete: if false;
+    }
+  }
+}
