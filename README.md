@@ -1,4 +1,10 @@
 # Innerflow
+## Try it out!
+Live demo is available here: [https://innerflow-598464211339.us-west2.run.app](https://innerflow-598464211339.us-west2.run.app)
+
+## Demo
+![Dashboard Demo](assets/demo.png)
+
 
 Innerflow is a minimalist, guided breathing and meditation application designed to help high-performers achieve neural synchronization and deep flow states.
 
