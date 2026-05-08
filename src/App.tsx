@@ -20,7 +20,7 @@ import { LogIn, Wind, Timer as TimerIcon, BarChart2, ChevronRight, History } fro
 import { cn } from './lib/utils';
 
 function AppContent() {
-  const { user, loading, signIn, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'practice' | 'hold' | 'progress' | 'profile'>('practice');
   const [selectedExercise, setSelectedExercise] = useState<Exercise>(EXERCISES[0]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('beginner');
@@ -84,13 +84,7 @@ function AppContent() {
           <p className="max-w-md text-sm text-white/40 tracking-[0.2em] uppercase mb-12">
             Meditation in Motion • Neural Synchronization
           </p>
-          <button
-            onClick={signIn}
-            className="flex items-center gap-3 px-12 py-4 rounded-full bg-white text-black text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-slate-100 transition-all active:scale-95"
-          >
-            <LogIn size={16} />
-            Initialize Sequence
-          </button>
+          <AuthForm />
         </div>
       </Shell>
     );
@@ -333,6 +327,66 @@ function AppContent() {
         </div>
       </div>
     </Shell>
+  );
+}
+
+function AuthForm() {
+  const { signIn, signUp } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    try {
+      if (isLogin) {
+        await signIn(email, password);
+      } else {
+        await signUp(email, password);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <div className="w-full max-w-sm mx-auto bg-white/5 border border-white/10 rounded-[32px] p-8">
+      <h3 className="text-xl font-medium text-white/90 mb-6">{isLogin ? 'Sign In' : 'Sign Up'}</h3>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <input 
+          type="email" 
+          value={email} 
+          onChange={e => setEmail(e.target.value)} 
+          placeholder="Email address" 
+          required 
+          className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/90 outline-none focus:border-indigo-500/50 transition-colors"
+        />
+        <input 
+          type="password" 
+          value={password} 
+          onChange={e => setPassword(e.target.value)} 
+          placeholder="Password" 
+          required 
+          className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/90 outline-none focus:border-indigo-500/50 transition-colors"
+        />
+        {error && <p className="text-red-400 text-xs text-left">{error}</p>}
+        <button
+          type="submit"
+          className="flex items-center justify-center gap-2 mt-2 px-8 py-3 rounded-xl bg-indigo-500 text-white text-xs font-bold tracking-[0.1em] uppercase hover:bg-indigo-600 transition-all active:scale-95"
+        >
+          <LogIn size={14} />
+          {isLogin ? 'Initialize Sequence' : 'Create Identity'}
+        </button>
+      </form>
+      <button 
+        onClick={() => setIsLogin(!isLogin)} 
+        className="mt-6 text-[10px] text-white/40 uppercase tracking-widest hover:text-white/80 transition-colors"
+      >
+        {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
+      </button>
+    </div>
   );
 }
 
